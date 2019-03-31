@@ -1,17 +1,28 @@
-- name: give some main name
+- hosts: all
+  become: yes
+  pre_tasks:
+    - name: Create /etc/ansible/facts.d
+      file:
+        path: /etc/ansible/facts.d
+        state: directory
+
+- name: common features
   hosts: all
   roles:
-    - devops_user 
-    - docker 
+    - common
+
+- name: installation kubernetes
+  hosts: all
+  roles:    
     - k8s-base
 
-- name: give some name for masters roles
+- name: init cluster
   hosts: master
   roles:
     - k8s-master
     
 
-- name: give some name for slave roles
+- name: join worker node
   hosts: worker
   roles: 
     - k8s-worker

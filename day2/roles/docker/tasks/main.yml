@@ -29,21 +29,6 @@
     enabled: yes
   changed_when: no
 
-- name: disable swap
-  become: yes 
-  lineinfile: 
-    path: /etc/fstab
-    state: present
-    regexp: '/dev/mapper/centos-swap'
-    line: '# /dev/mapper/centos-swap'    
-  changed_when: no
-
-- name: disable SELinux mode
-  become: yes 
-  selinux:
-    state: disabled 
-  changed_when: no   
-
 - name: swapoff
   become: yes 
   shell: |
