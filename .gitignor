@@ -1,4 +1,6 @@
-*.retry
-*.docx
-tok
-provision.yml
+day2/*.retry
+day2/*.docx
+day2/tok
+day2/provision.yml
+day2/.vagrant
+
