@@ -11,8 +11,8 @@
   become: yes 
   package:
     name: docker-ce
-    state: latest  
-
+    state: latest
+    
 - name: Enable Docker Edge repo
   become: yes 
   ini_file:
@@ -26,8 +26,19 @@
   service:
     name: docker
     state: started
-    enabled: yes
-  changed_when: no
+    enabled: yes  
+  notify:
+    - docker info  
+
+- name: Docker version
+  shell: docker -v | awk '{print $3}'| cut -f1 -d ','
+  register: docker_version
+  changed_when: False
+  
+- name: Docker build
+  shell: docker -v | awk '{print $5}'
+  register: docker_build
+  changed_when: False
 
 - name: swapoff
   become: yes 

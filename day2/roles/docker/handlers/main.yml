@@ -1,6 +1,17 @@
 ---
 # handlers file for docker
-- name: start docker
+- name: docker info
+  become: yes
+  copy: 
+    content: >
+      {
+        "Docker-Version": "{{ docker_version.stdout }}",
+        "Docker-Build": "{{ docker_build.stdout }}",
+        "Docker-Install-Date": "{{ ansible_date_time.iso8601 }}"
+      }
+    dest: /etc/ansible/facts.d/docker.fact
+
+- name: restart docker
   become: yes
   service:
     name: docker

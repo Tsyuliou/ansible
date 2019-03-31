@@ -13,7 +13,7 @@
     name: net.bridge.bridge-nf-call-iptables
     value: 1
     state: present
-
+    
 - name: add Kubernetes' YUM repository
   become: yes
   yum_repository:
@@ -31,6 +31,13 @@
       - kubeadm
       - ntp
     state: installed
+  notify:
+    - k8s info
+
+- name: k8s version
+  shell: kubelet --version | awk '{print $2}' | cut -c2-
+  register: k8s_version
+  changed_when: False
 
 - name: start kubelet
   become: yes
