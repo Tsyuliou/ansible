@@ -1,0 +1,18 @@
+[all:children]
+masters
+workers
+
+[masters]
+master ansible_host=192.168.56.22 
+
+[workers]
+worker ansible_host=192.168.56.21 
+
+[all:vars]
+ansible_connection=paramiko
+ansible_user=root
+ansible_ssh_pass=vagrant
+
+[masters:vars]
+
+[workers:vars]

@@ -1,0 +1,9 @@
+[nodes:children]
+masters
+workers
+
+[masters]
+192.168.56.20 
+
+[workers]
+192.168.56.21 

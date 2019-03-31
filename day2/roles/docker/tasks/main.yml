@@ -1,0 +1,57 @@
+---
+# tasks file for docker
+- name: Install docker (add rep)
+  become: yes      
+  get_url:
+    url: https://download.docker.com/linux/centos/docker-ce.repo
+    dest: /etc/yum.repos.d/docer-ce.repo 
+  changed_when: no  
+
+- name: Install Docker
+  become: yes 
+  package:
+    name: docker-ce
+    state: latest  
+
+- name: Enable Docker Edge repo
+  become: yes 
+  ini_file:
+    dest: /etc/yum.repos.d/docer-ce.repo
+    section: 'docker-ce-edge'
+    option: enabled
+    value: 0   
+
+- name: Started and enabled docker
+  become: yes 
+  service:
+    name: docker
+    state: started
+    enabled: yes
+  changed_when: no
+
+- name: disable swap
+  become: yes 
+  lineinfile: 
+    path: /etc/fstab
+    state: present
+    regexp: '/dev/mapper/centos-swap'
+    line: '# /dev/mapper/centos-swap'    
+  changed_when: no
+
+- name: disable SELinux mode
+  become: yes 
+  selinux:
+    state: disabled 
+  changed_when: no   
+
+- name: swapoff
+  become: yes 
+  shell: |
+    swapoff --all
+    echo "SELINUX=disabled" > /etc/sysconfig/selinux
+  changed_when: no  
+  notify:
+    - restart docker
+
+    # getenforce | grep Disabled || setenforce 0
+

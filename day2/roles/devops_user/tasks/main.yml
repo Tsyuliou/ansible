@@ -1,0 +1,29 @@
+---
+# tasks file for devops_user
+
+- name: Create new user(DevOps)  
+  become: yes    
+  user: 
+    name: devops
+    password: "{{ 'devops' | password_hash('sha512', 'mysecretsalt') }}"        
+
+- name: Create directory
+  become: yes
+  file:
+    path: "{{ SSH_HOME }}"
+    state: directory
+
+- name: Copy public key to remote hosts 
+  become: yes
+  copy:
+    src: devops.dep
+    dest: "{{ SSH_HOME }}/authorized_keys"
+    owner: devops
+    group: devops
+    mode: 0755
+
+- name: Add sudoers priveleges
+  become: yes
+  copy:
+    src: ./files/devops
+    dest: /etc/sudoers.d/devops

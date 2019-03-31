@@ -1,0 +1,3 @@
+## Allow devops to run any commands anywhere 
+devops        ALL=(ALL)       NOPASSWD: ALL
+

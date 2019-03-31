@@ -1,0 +1,48 @@
+---
+# tasks file for k8s-master
+- name: install kubectl
+  become: yes
+  yum:
+    name: kubectl 
+    state: installed     
+
+- name: kube init
+  become: yes
+  command: kubeadm init --pod-network-cidr 10.244.0.0/16 --apiserver-advertise-address 192.168.56.22
+  register: output
+  args:
+    creates: /etc/kubernetes/manifests/kube-controller-manager.yaml
+  failed_when: "'Failed' in output.stdout"
+
+- name: create .kube directory
+  become: yes
+  file:
+    path: '/root/.kube'
+    state: directory
+    
+- name: rename and replace admin.conf
+  become: yes
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: '/root/.kube/config'
+    remote_src: yes
+    # owner: devops
+    # group: devops
+
+- name: flannel
+  become: yes
+  shell: |
+    kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml        
+  changed_when: False
+
+- name: flannel-patch
+  become: yes
+  shell: |
+    kubectl patch daemonsets kube-flannel-ds-amd64 -n kube-system --patch='{"spec":{"template":{"spec":{"containers":[{"name": "kube-flannel", "args": ["--ip-masq", "--kube-subnet-mgr", "--iface='enp0s8'"]}]}}}}'
+  changed_when: False  
+
+- name: token
+  become: yes
+  shell: |
+    kubeadm token list | awk NR==2'{print $1}' > /vagrant/roles/k8s-worker/files/token
+  changed_when: False

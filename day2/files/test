@@ -1,0 +1,48 @@
+- hosts: webservers
+
+  tasks:
+  - name: install nginx webserver
+    package: name=nginx state=installed
+
+  - name: copy nginx configuration
+    copy: src=nginx.conf dest=/etc/nginx/nginx.conf
+
+  - name: ensure nginx is enabled and running
+    service: name=nginx enabled=yes state=running
+
+
+-hosts: centos
+
+ tasks:
+ - package: name=epel-release
+   become: yes
+
+- hosts: nodes
+
+  tasks:
+  - name: install nginx webserver
+    package: name=nginx state=installed
+    become: yes
+
+  - name: copy nginx configuration
+    copy: src=nginx.conf dest=/etc/nginx/nginx.conf
+    become: yes
+
+  - name: ensure nginx is enabled and running
+    service: name=nginx enabled=yes state=start
+    become:yes
+
+
+
+
+ansible_python_interpreter=/usr/bin/python3
+
+
+vars_files:
+  - text.file
+
+tasks:
+  - debug: 
+
+
+# cat /etc/centos-release

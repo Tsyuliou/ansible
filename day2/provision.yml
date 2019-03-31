@@ -1,0 +1,148 @@
+ #--------------- ansible-playbook provision.yml -i inventory -------------------#
+
+#-------------------------------- Install Docker --------------------------------#
+
+- name: Install docker
+  hosts: all
+  become: yes
+  tasks:
+    - name: Add Docker repo
+      get_url:
+        url: https://download.docker.com/linux/centos/docker-ce.repo
+        dest: /etc/yum.repos.d/docer-ce.repo      
+
+    - name: Install Docker
+      package:
+        name: docker-ce
+        state: latest     
+    - name: Enable Docker Edge repo
+      ini_file:
+        dest: /etc/yum.repos.d/docer-ce.repo
+        section: 'docker-ce-edge'
+        option: enabled
+        value: 0
+
+#-------------------------------- Configure Docker ------------------------------#
+
+- name: Configure Docker and dependency
+  hosts: all
+  become: yes
+  tasks:
+    - name: Disable Swap
+      shell: |
+        sed -i '/swap/d' /etc/fstab
+        swapoff --all
+
+    - name: Disable SELinux
+      shell: |
+        getenforce | grep Disabled || setenforce 0
+        echo "SELINUX=disabled" > /etc/sysconfig/selinux  
+    - name: Restart and Enable Docker
+      service:
+        name: docker
+        state: restarted        
+        enabled: yes
+
+#-------------------------------- Install Kubernetes ---------------------------#
+
+- hosts: all
+  become: yes
+  tasks:
+    - name: disable SELinux mode
+      selinux:
+        state: disabled
+
+    - name: ensure net.bridge.bridge-nf-call-ip6tables is set to 1
+      sysctl:
+        name: net.bridge.bridge-nf-call-ip6tables
+        value: 1
+        state: present
+
+    - name: ensure net.bridge.bridge-nf-call-iptables is set to 1
+      sysctl:
+        name: net.bridge.bridge-nf-call-iptables
+        value: 1
+        state: present
+
+    - name: add Kubernetes' YUM repository
+      yum_repository:
+        name: Kubernetes
+        description: Kubernetes YUM repository
+        baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+        gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+        gpgcheck: yes
+
+    - name: install dependency
+      yum:
+        name:
+          - kubelet
+          - kubeadm
+          - ntp
+        state: installed
+
+    - name: start kubelet
+      service:
+        name: kubelet          
+        enabled: yes
+        state: started
+
+    - name: start ntpd
+      service:
+        name: ntpd          
+        enabled: yes
+        state: started
+
+
+#-------------------------------- Configure Master --------------------------#
+
+- hosts: masters
+  become: yes
+  tasks:
+    - name: install kubectl
+      yum:
+        name: kubectl 
+        state: installed     
+
+    - name: kube init
+      command: kubeadm init --pod-network-cidr 10.244.0.0/16 --apiserver-advertise-address 192.168.56.22
+      register: output
+      args:
+        creates: /etc/kubernetes/manifests/kube-controller-manager.yaml
+      failed_when: "'Failed' in output.stdout"
+  
+    - name: create .kube directory
+      file:
+        path: '{{ ansible_user_dir }}.kube/'
+        state: directory
+        
+    - name: rename and replace admin.conf
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: '{{ ansible_user_dir }}.kube/config'
+        remote_src: yes
+  
+    - name: flannel
+      shell: |
+        kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml        
+      changed_when: False
+
+    - name: flannel-patch
+      shell: |
+        kubectl patch daemonsets kube-flannel-ds-amd64 -n kube-system --patch='{"spec":{"template":{"spec":{"containers":[{"name": "kube-flannel", "args": ["--ip-masq", "--kube-subnet-mgr", "--iface='enp0s8'"]}]}}}}'
+      changed_when: False  
+
+    - name: token
+      shell: |
+        kubeadm token list | awk NR==2'{print $1}' > /vagrant/tok
+      
+# #-------------------------------- Configure Worker --------------------------#
+- hosts: workers
+  become: yes
+  tasks:
+    - name: Join to cluster
+      shell: |
+        kubeadm join --token $(cat /vagrant/tok) --discovery-token-unsafe-skip-ca-verification 192.168.56.22:6443
+      register: output
+      args:
+        creates: /etc/kubernetes/kubelet.conf
+      failed_when: "'Failed' in output.stdout"  

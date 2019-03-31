@@ -1,0 +1,47 @@
+---
+# tasks file for k8s-base
+- name: ensure net.bridge.bridge-nf-call-ip6tables is set to 1
+  become: yes
+  sysctl:
+    name: net.bridge.bridge-nf-call-ip6tables
+    value: 1
+    state: present
+
+- name: ensure net.bridge.bridge-nf-call-iptables is set to 1
+  become: yes
+  sysctl:
+    name: net.bridge.bridge-nf-call-iptables
+    value: 1
+    state: present
+
+- name: add Kubernetes' YUM repository
+  become: yes
+  yum_repository:
+    name: Kubernetes
+    description: Kubernetes YUM repository
+    baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+    gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+    gpgcheck: yes
+
+- name: install dependency
+  become: yes
+  yum:
+    name:
+      - kubelet
+      - kubeadm
+      - ntp
+    state: installed
+
+- name: start kubelet
+  become: yes
+  service:
+    name: kubelet          
+    enabled: yes
+    state: started
+
+- name: start ntpd
+  become: yes
+  service:
+    name: ntpd          
+    enabled: yes
+    state: started

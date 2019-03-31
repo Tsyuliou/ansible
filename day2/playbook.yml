@@ -1,0 +1,27 @@
+- name: give some main name
+  hosts: all
+  roles:
+    - devops_user 
+    - docker 
+    - k8s-base
+
+- name: give some name for masters roles
+  hosts: master
+  roles:
+    - k8s-master
+    
+
+- name: give some name for slave roles
+  hosts: worker
+  roles: 
+    - k8s-worker
+    
+
+- hosts: master
+  become: yes  
+  post_tasks:
+    - name: add worker status for node
+      shell: kubectl label node worker-node node-role.kubernetes.io/worker=worker
+      register: output     
+      failed_when: "'Failed' in output.stdout"
+      changed_when: no

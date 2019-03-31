@@ -1,0 +1,4 @@
+---
+# vars file for devops_user
+DevOps_HOME: /home/devops/
+SSH_HOME: /home/devops/.ssh/
