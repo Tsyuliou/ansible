@@ -3,4 +3,6 @@ day2/*.docx
 day2/tok
 day2/provision.yml
 day2/.vagrant
+day2/id_rsa
+
 
