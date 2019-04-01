@@ -1,2 +1,3 @@
 ---
 # defaults file for k8s-worker
+token_path: "/vagrant/roles/k8s-worker/files/token"

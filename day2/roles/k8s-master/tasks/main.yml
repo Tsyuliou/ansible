@@ -11,7 +11,7 @@
   command: kubeadm init --pod-network-cidr 10.244.0.0/16 --apiserver-advertise-address 192.168.56.22
   register: output
   args:
-    creates: /etc/kubernetes/manifests/kube-controller-manager.yaml
+    creates: "{{ kube_manager }}"
   failed_when: "'Failed' in output.stdout"
 
 - name: create .kube directory
@@ -23,16 +23,14 @@
 - name: rename and replace admin.conf
   become: yes
   copy:
-    src: /etc/kubernetes/admin.conf
+    src: "{{ admin_conf }}"
     dest: '/root/.kube/config'
-    remote_src: yes
-    # owner: devops
-    # group: devops
+    remote_src: yes  
 
 - name: flannel
   become: yes
   shell: |
-    kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/bc79dd1505b0c8681ece4de4c0d86c5cd2643275/Documentation/kube-flannel.yml        
+    kubectl apply -f "{{ flanel_url }}"        
   changed_when: False
 
 - name: flannel-patch

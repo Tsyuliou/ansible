@@ -3,7 +3,7 @@
 - name: Install docker (add rep)
   become: yes      
   get_url:
-    url: https://download.docker.com/linux/centos/docker-ce.repo
+    url: "{{ doc_url }}"
     dest: /etc/yum.repos.d/docer-ce.repo 
   changed_when: no  
 
@@ -48,6 +48,3 @@
   changed_when: no  
   notify:
     - restart docker
-
-    # getenforce | grep Disabled || setenforce 0
-

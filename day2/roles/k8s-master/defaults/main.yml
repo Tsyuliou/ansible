@@ -1,2 +1,4 @@
 ---
 # defaults file for k8s-master
+kube_manager: /etc/kubernetes/manifests/kube-controller-manager.yaml
+admin_conf: /etc/kubernetes/admin.conf

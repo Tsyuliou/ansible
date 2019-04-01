@@ -6,27 +6,21 @@
         path: /etc/ansible/facts.d
         state: directory
 
-- name: common features
+- name: common feature / installation kubernetes
   hosts: all
-  roles:
-    - common
-
-- name: installation kubernetes
-  hosts: all
-  roles:    
+  roles:   
+    - common    
     - k8s-base
 
 - name: init cluster
   hosts: master
   roles:
-    - k8s-master
-    
+    - k8s-master    
 
 - name: join worker node
   hosts: worker
   roles: 
-    - k8s-worker
-    
+    - k8s-worker    
 
 - hosts: master
   become: yes  

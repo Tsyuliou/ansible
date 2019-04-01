@@ -3,7 +3,7 @@
 - name: Join to cluster
   become: yes
   shell: |
-    kubeadm join --token $(cat /vagrant/roles/k8s-worker/files/token) --discovery-token-unsafe-skip-ca-verification 192.168.56.22:6443
+    kubeadm join --token $(cat {{ token_path }}) --discovery-token-unsafe-skip-ca-verification 192.168.56.22:6443
   register: output
   args:
     creates: /etc/kubernetes/kubelet.conf
